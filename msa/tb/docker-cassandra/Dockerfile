@@ -42,13 +42,16 @@ ENV CASSANDRA_LOG=/var/log/cassandra
 
 COPY logback.xml ${pkg.name}.conf start-db.sh stop-db.sh start-tb.sh upgrade-tb.sh install-tb.sh ${pkg.name}.deb /tmp/
 
-RUN apt-get update \
+RUN echo "deb http://mirrors.aliyun.com/debian bookworm main contrib non-free" > /etc/apt/sources.list \
+    && echo "deb http://mirrors.aliyun.com/debian bookworm-updates main contrib non-free" >> /etc/apt/sources.list \
+    && echo "deb http://mirrors.aliyun.com/debian-security bookworm-security main contrib non-free" >> /etc/apt/sources.list \
+	&& apt-get update --fix-missing -o Acquire::http::No-Cache=True \
     && apt-get install -y --no-install-recommends wget nmap procps gnupg2 \
     && echo "deb http://apt.postgresql.org/pub/repos/apt/ $(. /etc/os-release && echo -n $VERSION_CODENAME)-pgdg main" | tee --append /etc/apt/sources.list.d/pgdg.list > /dev/null \
     && wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O- | apt-key add - \
     && echo "deb https://debian.cassandra.apache.org 40x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list > /dev/null \
     && wget -q https://downloads.apache.org/cassandra/KEYS -O- | apt-key add - \
-    && apt-get update \
+	&& apt-get update --fix-missing -o Acquire::http::No-Cache=True \
     && apt-get install -y --no-install-recommends cassandra cassandra-tools postgresql-${PG_MAJOR} \
     && rm -rf /var/lib/apt/lists/* \
     && update-rc.d cassandra disable \
